@@ -151,11 +151,11 @@ HAVCS_SERVICE_SCHEMA = vol.Schema({
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     conf = config.get(DOMAIN)  # type: ConfigType
- 
+
     if conf is None:
         # If we have a config entry, setup is done by that config entry.
         # If there is no config entry, this should fail.
-        return bool(hass.config_entries.async_entries(DOMAIN))     
+        return bool(hass.config_entries.async_entries(DOMAIN))
 
     hass.data[DATA_HAVCS_CONFIG] = conf
 
@@ -193,7 +193,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             _LOGGER.error('[init] fail to start havcs: skill mode require mqtt congfiguration')
             return False
         MODE.append('skill')
-    
+
     havcs_util.ENTITY_KEY = conf.get(CONF_SETTING, {}).get(CONF_ENTITY_KEY)
     havcs_util.CONTEXT_HAVCS = Context(conf.get(CONF_SETTING, {}).get(CONF_USER_ID))
 
@@ -245,7 +245,7 @@ async def async_setup_entry(hass, entry):
             havcd_config_file.write('')
 
     platform = conf[CONF_PLATFORM]
-    
+
     if CONF_HTTP_PROXY not in conf and CONF_SKILL not in conf:
         _LOGGER.debug('[init] havcs only run in http mode, skip mqtt initialization')
         _LOGGER.info('[init] initialization finished.')
@@ -263,7 +263,7 @@ async def async_setup_entry(hass, entry):
                 _LOGGER.info('[init] load config after startup')
             await async_load_config()
             async def async_handler_service(service):
-                
+
                 if service.service == SERVICE_RELOAD:
                     try:
                         hass.data[DOMAIN]['devices'] = await hass.async_add_executor_job(
@@ -444,7 +444,7 @@ async def async_setup_entry(hass, entry):
         await hass.data[DATA_HAVCS_MQTT].async_publish("ai-home/http2mqtt2hass/"+app_key+"/response/test", 'init', 2, False)
 
         async def async_handler_service(service):
-            
+
             if service.service == SERVICE_RELOAD:
                 try:
                     hass.data[DOMAIN]['devices'] = await hass.async_add_executor_job(
@@ -556,14 +556,14 @@ async def async_setup_entry(hass, entry):
         await hass.data[DATA_HAVCS_MQTT].async_publish(topic.replace('/request/','/response/'), res, 2, False)
         end_time = datetime.now()
         _LOGGER.debug('[mqtt] -------- mqtt task finish at %s, Running time: %ss --------', end_time.strftime('%Y-%m-%d %H:%M:%S'), (end_time - start_time).total_seconds())
-        
+
     async def async_publish_error(resData,topic):
         res = {
                 'headers': {'Content-Type': 'application/json;charset=utf-8'},
                 'status': 404,
                 'content': '',
                 'msgId': resData.get('msgId')
-            }                    
+            }
         res = havcs_util.AESCipher(decrypt_key).encrypt(json.dumps(res, ensure_ascii = False).encode('utf8'))
         await hass.data[DATA_HAVCS_MQTT].async_publish(topic.replace('/request/','/response/'), res, 2, False)
 
@@ -588,10 +588,10 @@ async def async_setup_entry(hass, entry):
             req = json.loads(payload)
             if req.get('msgType') == 'hello':
                 _LOGGER.info('[mqtt] get hello message: %s', req.get('content'))
-                end_time = datetime.now() 
+                end_time = datetime.now()
                 _LOGGER.debug('[mqtt] -------- mqtt task finish at %s, Running time: %ss --------', end_time.strftime('%Y-%m-%d %H:%M:%S'), (end_time - start_time).total_seconds())
                 return
-            
+
             _LOGGER.debug("[mqtt] raw message: %s", req)
             if req.get('platform') == 'h2m2h':
                 if('http_proxy' not in MODE):
@@ -605,7 +605,7 @@ async def async_setup_entry(hass, entry):
             else:
                 if('skill' not in MODE):
                     _LOGGER.info('[skill] havcs not run in skill mode, ignore request: %s', req)
-                    raise RuntimeError 
+                    raise RuntimeError
                 hass.add_job(async_module_handler(req, topic, start_time))
 
         except (JSONDecodeError, UnicodeDecodeError, binascii.Error):
@@ -619,7 +619,7 @@ async def async_setup_entry(hass, entry):
         except:
             _LOGGER.error('[mqtt] fail to handle %s', traceback.format_exc())
             end_time = datetime.now()
-        if end_time:    
+        if end_time:
             _LOGGER.debug('[mqtt] -------- mqtt task finish at %s, Running time: %ss --------', end_time.strftime('%Y-%m-%d %H:%M:%S'), (end_time - start_time).total_seconds())
 
     await hass.data[DATA_HAVCS_MQTT].async_subscribe("ai-home/http2mqtt2hass/"+app_key+"/request/#", message_received, 2, 'utf-8')
@@ -687,7 +687,7 @@ class HavcsAuthView(HomeAssistantView):
         except JSONDecodeError:
             query_string = body_data if body_data else request.query_string
             _LOGGER.debug('[auth] request query : %s', query_string)
-            data = { k:v[0] for k, v in parse.parse_qs(query_string).items() }             
+            data = { k:v[0] for k, v in parse.parse_qs(query_string).items() }
 
         # self._platform_uri = data.get('redirect_uri')
         # data['redirect_uri'] = self._havcs_auth_url
@@ -695,10 +695,15 @@ class HavcsAuthView(HomeAssistantView):
         grant_type = data.get('grant_type')
         try:
             session = async_get_clientsession(self._hass, verify_ssl=False)
+            _LOGGER.debug(f'[auth] got client session： {session}')
             with async_timeout.timeout(5, loop=self._hass.loop):
+                _LOGGER.debug('[auth] POST to %s get token, data: %s', self._token_url, data)
                 response = await session.post(self._token_url, data=data)
+                _LOGGER.debug('[auth] request success')
         except(asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("[auth] fail to get token, access %s in local network: timeout", self._token_url)
+        except Exception as e:
+            _LOGGER.error(f"[auth] Exception {e.__class__.__name__}: {str(e)}")
 
         if grant_type == 'authorization_code':
             try:
@@ -716,7 +721,7 @@ class HavcsAuthView(HomeAssistantView):
                 except(asyncio.TimeoutError, aiohttp.ClientError):
                     _LOGGER.error("[auth] fail to get new access token, access %s in local network: timeout", self._token_url)
                     return web.Response(status=response.status)
-                
+
                 try:
                     refresh_token_result = await response.json()
                     _LOGGER.debug('[auth] get new access token[%s] with new expiration.', refresh_token_result.get('access_token'))
@@ -740,7 +745,7 @@ class HavcsAuthView(HomeAssistantView):
             except:
                 result = await response.text()
                 _LOGGER.error("[auth] fail to deal %s request, get response: status = %s, data = %s", grant_type, response.status, result)
-                return web.Response(status=response.status)        
+                return web.Response(status=response.status)
         else:
             try:
                 result = await response.json()
@@ -751,4 +756,3 @@ class HavcsAuthView(HomeAssistantView):
                 _LOGGER.error("[auth] fail to deal %s request, get response: status = %s, data = %s", grant_type, response.status, result)
                 return web.Response(status=response.status)
         # return web.Response( headers={'Location': self._auth_url+'?'+query_string}, status=303)
-        

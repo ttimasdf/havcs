@@ -19,15 +19,15 @@ class VoiceControlProcessor:
         raise NotImplementedError()
 
     def _discovery_process_device_info(self, entity_id, device_type, device_name, zone, properties, actions) -> None:
-        raise NotImplementedError() 
-  
+        raise NotImplementedError()
+
     def _control_process_propertites(self, device_properties, action) -> None:
         raise NotImplementedError()
 
     def _query_process_propertites(self, device_properties, action) -> None:
-        raise NotImplementedError()  
+        raise NotImplementedError()
 
-    def _prase_action_p2h(self, action) -> None:
+    def _parse_action_p2h(self, action) -> None:
         i = 0
         service = ''
         for c in action.split('Request')[0]:
@@ -38,9 +38,9 @@ class VoiceControlProcessor:
     def _decrypt_device_id(self, device_id) -> None:
         raise NotImplementedError()
 
-    def _prase_command(self, command, arg) -> None:
+    def _parse_command(self, command, arg) -> None:
         raise NotImplementedError()
-    
+
     def _errorResult(self, errorCode, messsage=None) -> None:
         raise NotImplementedError()
 
@@ -63,11 +63,11 @@ class VoiceControlProcessor:
         return None, devices, entity_ids
 
     async def process_control_command(self, command) -> tuple:
-        device_id = self._prase_command(command, 'device_id')
+        device_id = self._parse_command(command, 'device_id')
         entity_id = self._decrypt_device_id(device_id)
         if entity_id is None:
             return self._errorResult('DEVICE_IS_NOT_EXIST'), None
-        action = self._prase_command(command, 'action')
+        action = self._parse_command(command, 'action')
         domain = entity_id[:entity_id.find('.')]
         data = {"entity_id": entity_id }
         domain_list = [domain]
@@ -78,7 +78,7 @@ class VoiceControlProcessor:
             if callable(translation):
                 attributes = self._hass.data[INTEGRATION]['devices'].get(entity_id)
                 state = self._hass.states.get(entity_id)
-                domain_list, service_list, data_list = translation(state, attributes, self._prase_command(command, 'payload'))
+                domain_list, service_list, data_list = translation(state, attributes, self._parse_command(command, 'payload'))
                 _LOGGER.debug('domain_list: %s', domain_list)
                 _LOGGER.debug('service_list: %s', service_list)
                 _LOGGER.debug('data_list: %s', data_list)
@@ -88,7 +88,7 @@ class VoiceControlProcessor:
             else:
                 service_list[0] = translation
         else:
-            service_list[0] = self._prase_action_p2h(action)
+            service_list[0] = self._parse_action_p2h(action)
 
         for i in range(len(domain_list)):
             _LOGGER.debug('domain: %s, servcie: %s, data: %s', domain_list[i], service_list[i], data_list[i])
@@ -102,11 +102,11 @@ class VoiceControlProcessor:
         return None, properties
 
     def process_query_command(self, command) -> tuple:
-        device_id = self._prase_command(command, 'device_id')
+        device_id = self._parse_command(command, 'device_id')
         entity_id = self._decrypt_device_id(device_id)
         if entity_id is None:
             return self._errorResult('DEVICE_IS_NOT_EXIST'), None
-        action = self._prase_command(command, 'action')
+        action = self._parse_command(command, 'action')
         device_properties = self.vcdm.get(entity_id).get('properties')
         properties = self._query_process_propertites(device_properties, action)
         return (None, properties) if properties else (self._errorResult('IOT_DEVICE_OFFLINE'), None)
@@ -161,7 +161,7 @@ class VoiceControlDeviceManager:
                 elif related_entity_id.startswith('sensor.'):
                     sensor_ids.append(related_entity_id)
                 else:
-                    pass 
+                    pass
             for sensor in sensor_ids:
                 sensor_properties = self.get_device_properties(hass, sensor, attributes)
                 if sensor_properties :
@@ -179,7 +179,7 @@ class VoiceControlDeviceManager:
             'actions': actions
         }
         return {entity_id:device_info}
- 
+
     def get_device_attrs(self, device) -> list:
         return device.get('entity_id'),device.get('device_type'),device.get('device_name'),device.get('zone'),device.get('properties'),device.get('actions')
 
@@ -235,7 +235,7 @@ class VoiceControlDeviceManager:
                     if alias in device_name:
                         probably_device_names += [alias]
             return max(probably_device_names) if probably_device_names else None
-            
+
         return device_name
 
     def get_device_zone(self, hass, entity_id, attributes, places = [], zone_constraints = []) ->str:
@@ -255,7 +255,7 @@ class VoiceControlDeviceManager:
                         zone = place
                         break
         if zone == '未指定':
-            # Guess from HomeAssistant group which contains entity 
+            # Guess from HomeAssistant group which contains entity
             for state in hass.states.async_all():
                 group_entity_id = state.entity_id
                 if group_entity_id.startswith('group.') and not group_entity_id.startswith('group.all_') and group_entity_id != 'group.default_view':
@@ -301,7 +301,7 @@ class VoiceControlDeviceManager:
         else:
             properties = [{'entity_id': entity_id, 'attribute': 'power_state'}]
         return properties
-    
+
     def get_property_related_entity_id(self, attribute, properties):
         for device_property in properties:
             if attribute == device_property.get('attribute'):
@@ -343,10 +343,10 @@ class VoiceControlDeviceManager:
         else:
             action = ["turn_on", "turn_off", "timing_turn_on", "timing_turn_off"]
         return action
-    
+
     def get_sensor_actions_from_properties(self, properties) -> list:
         return [ 'query_' + device_property.get('attribute') for device_property in properties]
-    
+
 # 用于管理哪些平台哪些用户有哪些设备
 class BindManager:
     _privious_upload_devices = {}
@@ -358,7 +358,7 @@ class BindManager:
         self._platforms = platforms
         for platform in platforms:
             self._new_upload_devices[platform]={}
-    
+
     async def async_load(self):
         data =  await self._store.async_load()  # load task config from disk
         if data:
@@ -376,7 +376,7 @@ class BindManager:
         else:
             bind_entity_ids = [device['entity_id'] for device in self._new_upload_devices.get(platform).values() if (search & device['linked_account']) and not(search & self._privious_upload_devices.get(device['entity_id'],{}).get('linked_account',set()))]
         return bind_entity_ids
-    
+
     def get_unbind_entity_ids(self, platform, p_user_id = ''):
         search = set([p_user_id + '@' + platform, '*@' + platform])
         unbind_devices = [device['entity_id'] for device in self._privious_upload_devices.values() if (search & device['linked_account']) and not(search & self._new_upload_devices.get(platform).get(device['entity_id'],{}).get('linked_account',set()))]
@@ -405,7 +405,7 @@ class BindManager:
                 self._new_upload_devices.get(platform)[entity_id] = device
 
     async def async_save(self, platform, p_user_id= '*'):
-        devices = {}         
+        devices = {}
         for entity_id in self.get_unbind_entity_ids(platform, p_user_id):
             if entity_id in devices:
                 device =  devices.get(entity_id)

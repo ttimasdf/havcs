@@ -184,11 +184,11 @@ class VoiceControlJdwhale(PlatformParameter, VoiceControlProcessor):
         """Handle request"""
         _LOGGER.info("[%s] Handle Request:\n%s", LOGGER_NAME, data)
 
-        header = self._prase_command(data, 'header')
-        payload = self._prase_command(data, 'payload')
-        action = self._prase_command(data, 'action')
-        namespace = self._prase_command(data, 'namespace')
-        p_user_id = self._prase_command(data, 'user_uid')
+        header = self._parse_command(data, 'header')
+        payload = self._parse_command(data, 'payload')
+        action = self._parse_command(data, 'action')
+        namespace = self._parse_command(data, 'namespace')
+        p_user_id = self._parse_command(data, 'user_uid')
         # uid = p_user_id+'@'+DOMAIN
         content = {}
 
@@ -218,13 +218,13 @@ class VoiceControlJdwhale(PlatformParameter, VoiceControlProcessor):
                 content['deviceId'] = payload['deviceId']
         else:
             header['name'] = action.replace('Request','Response')
-    
+
         response = {'header': header, 'payload': content}
 
         _LOGGER.info("[%s] Respnose:\n%s", LOGGER_NAME, response)
         return response
 
-    def _prase_command(self, command, arg):
+    def _parse_command(self, command, arg):
         header = command['header']
         payload = command['payload']
 
@@ -241,7 +241,7 @@ class VoiceControlJdwhale(PlatformParameter, VoiceControlProcessor):
 
     def _discovery_process_propertites(self, device_properties):
         return {"result": "SUCCESS"}
-    
+
     def _discovery_process_actions(self, device_properties, raw_actions):
         actions = []
         for device_property in device_properties:

@@ -109,7 +109,7 @@ class PlatformParameter:
             'turn_on': lambda state, attributes, payload:([cmnd[0] for cmnd in attributes['havcs_actions']['turn_on']], [cmnd[1] for cmnd in attributes['havcs_actions']['turn_on']], [json.loads(cmnd[2]) for cmnd in attributes['havcs_actions']['turn_on']]) if attributes.get('havcs_actions') else (['input_boolean'], ['turn_on'], [{}]),
             'turn_off': lambda state, attributes, payload:([cmnd[0] for cmnd in attributes['havcs_actions']['turn_off']], [cmnd[1] for cmnd in attributes['havcs_actions']['turn_off']], [json.loads(cmnd[2]) for cmnd in attributes['havcs_actions']['turn_off']]) if attributes.get('havcs_actions') else (['input_boolean'], ['turn_off'], [{}]),
             'increase_brightness': lambda state, attributes, payload:([cmnd[0] for cmnd in attributes['havcs_actions']['increase_brightness']], [cmnd[1] for cmnd in attributes['havcs_actions']['increase_brightness']], [json.loads(cmnd[2]) for cmnd in attributes['havcs_actions']['increase_brightness']]) if attributes.get('havcs_actions') else (['input_boolean'], ['turn_on'], [{}]),
-            'decrease_brightness': lambda state, attributes, payload:([cmnd[0] for cmnd in attributes['havcs_actions']['decrease_brightness']], [cmnd[1] for cmnd in attributes['havcs_actions']['decrease_brightness']], [json.loads(cmnd[2]) for cmnd in attributes['havcs_actions']['decrease_brightness']]) if attributes.get('havcs_actions') else (['input_boolean'], ['turn_on'], [{}]),                 
+            'decrease_brightness': lambda state, attributes, payload:([cmnd[0] for cmnd in attributes['havcs_actions']['decrease_brightness']], [cmnd[1] for cmnd in attributes['havcs_actions']['decrease_brightness']], [json.loads(cmnd[2]) for cmnd in attributes['havcs_actions']['decrease_brightness']]) if attributes.get('havcs_actions') else (['input_boolean'], ['turn_on'], [{}]),
             'timing_turn_on': lambda state, attributes, payload: (['common_timer'], ['set'], [{'operation': 'custom:havcs_actions/timing_turn_on', 'duration': int(payload['timestamp']['value']) - int(time.time())}]),
             'timing_turn_off': lambda state, attributes, payload: (['common_timer'], ['set'], [{'operation': 'custom:havcs_actions/timing_turn_off', 'duration': int(payload['timestamp']['value']) - int(time.time())}]),
         }
@@ -144,10 +144,10 @@ class VoiceControlDueros(PlatformParameter, VoiceControlProcessor):
         """Handle request"""
         _LOGGER.info("[%s] Handle Request:\n%s", LOGGER_NAME, data)
 
-        header = self._prase_command(data, 'header')
-        # action = self._prase_command(data, 'action')
-        namespace = self._prase_command(data, 'namespace')
-        p_user_id = self._prase_command(data, 'user_uid')
+        header = self._parse_command(data, 'header')
+        # action = self._parse_command(data, 'action')
+        namespace = self._parse_command(data, 'namespace')
+        p_user_id = self._parse_command(data, 'user_uid')
         result = {}
         # uid = p_user_id+'@'+DOMAIN
 
@@ -167,7 +167,7 @@ class VoiceControlDueros(PlatformParameter, VoiceControlProcessor):
                 result = self._errorResult('SERVICE_ERROR')
         else:
             result = self._errorResult('ACCESS_TOKEN_INVALIDATE')
-        
+
         # Check error
         header['name'] = 'Response'
         if 'errorCode' in result:
@@ -178,7 +178,7 @@ class VoiceControlDueros(PlatformParameter, VoiceControlProcessor):
         _LOGGER.info("[%s] Respnose:\n%s", LOGGER_NAME, response)
         return response
 
-    def _prase_command(self, command, arg):
+    def _parse_command(self, command, arg):
         header = command['header']
         payload = command['payload']
 
@@ -205,9 +205,9 @@ class VoiceControlDueros(PlatformParameter, VoiceControlProcessor):
                         value = 'off'
 
                 properties += [{'name': name, 'value': value, 'scale': PROPERTY_DICT.get(name, {}).get('scale'), 'timestampOfSample': int(time.time()), 'uncertaintyInMilliseconds': 1000, 'legalValue': PROPERTY_DICT.get(name, {}).get('legalValue') }]
-                
+
         return properties if properties else None
-    
+
     def _discovery_process_actions(self, device_properties, raw_actions):
         actions = []
         for device_property in device_properties:
@@ -244,7 +244,7 @@ class VoiceControlDueros(PlatformParameter, VoiceControlProcessor):
 
 
     def _control_process_propertites(self, device_properties, action) -> None:
-        
+
         return self._discovery_process_propertites(device_properties)
 
     def _query_process_propertites(self, device_properties, action) -> None:
