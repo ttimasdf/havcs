@@ -4,7 +4,7 @@ import uuid
 import copy
 import time
 from urllib.request import urlopen
-from .util import decrypt_device_id, encrypt_entity_id
+from .util import decrypt_device_id, encrypt_entity_id, deserialize_custom_actions
 from .helper import VoiceControlProcessor, VoiceControlDeviceManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -130,12 +130,12 @@ class PlatformParameter:
             'SetColor':             lambda state, attributes, payload: (['light'], ['turn_on'], [{"color_name": payload['value']}])
         },
         'input_boolean':{
-            'TurnOn': lambda state, attributes, payload:([cmnd[0] for cmnd in attributes['havcs_actions']['turn_on']], [cmnd[1] for cmnd in attributes['havcs_actions']['turn_on']], [json.loads(cmnd[2]) for cmnd in attributes['havcs_actions']['turn_on']]) if attributes.get('havcs_actions') else (['input_boolean'], ['turn_on'], [{}]),
-            'TurnOff': lambda state, attributes, payload:([cmnd[0] for cmnd in attributes['havcs_actions']['turn_off']], [cmnd[1] for cmnd in attributes['havcs_actions']['turn_off']], [json.loads(cmnd[2]) for cmnd in attributes['havcs_actions']['turn_off']]) if attributes.get('havcs_actions') else (['input_boolean'], ['turn_off'], [{}]),
-            'AdjustUpBrightness': lambda state, attributes, payload:([cmnd[0] for cmnd in attributes['havcs_actions']['increase_brightness']], [cmnd[1] for cmnd in attributes['havcs_actions']['increase_brightness']], [json.loads(cmnd[2]) for cmnd in attributes['havcs_actions']['increase_brightness']]) if attributes.get('havcs_actions') else (['input_boolean'], ['turn_on'], [{}]),
-            'AdjustDownBrightness': lambda state, attributes, payload:([cmnd[0] for cmnd in attributes['havcs_actions']['decrease_brightness']], [cmnd[1] for cmnd in attributes['havcs_actions']['decrease_brightness']], [json.loads(cmnd[2]) for cmnd in attributes['havcs_actions']['decrease_brightness']]) if attributes.get('havcs_actions') else (['input_boolean'], ['turn_on'], [{}]),
+            'TurnOn': deserialize_custom_actions("turn_on", default_action=(['input_boolean'], ['turn_on'], [{}])),
+            'TurnOff': deserialize_custom_actions("turn_off", default_action=(['input_boolean'], ['turn_off'], [{}])),
+            'SetBrightness': deserialize_custom_actions("set_brightness", default_action=(['input_boolean'], ['turn_off'], [{}])),
+            'AdjustUpBrightness': deserialize_custom_actions("increase_brightness", default_action=(['input_boolean'], ['turn_on'], [{}])),
+            'AdjustDownBrightness': deserialize_custom_actions("decrease_brightness", default_action=(['input_boolean'], ['turn_on'], [{}])),
         }
-
     }
     # action:[{Platfrom Attr: HA Attr},{}]
     _query_map_p2h = {
@@ -173,12 +173,12 @@ class VoiceControlAligenie(PlatformParameter, VoiceControlProcessor):
 
     async def handleRequest(self, data, auth = False):
         """Handle request"""
-        _LOGGER.info("[%s] Handle Request:\n%s", LOGGER_NAME, data)
+        _LOGGER.info(f"[{LOGGER_NAME}] Handle Request: {data}")
 
-        header = self._prase_command(data, 'header')
-        payload = self._prase_command(data, 'payload')
-        action = self._prase_command(data, 'action')
-        namespace = self._prase_command(data, 'namespace')
+        header = self._parse_command(data, 'header')
+        payload = self._parse_command(data, 'payload')
+        action = self._parse_command(data, 'action')
+        namespace = self._parse_command(data, 'namespace')
         properties = None
         content = {}
 
@@ -212,10 +212,10 @@ class VoiceControlAligenie(PlatformParameter, VoiceControlProcessor):
         response = {'header': header, 'payload': content}
         if properties:
             response['properties'] = properties
-        _LOGGER.info("[%s] Respnose:\n%s", LOGGER_NAME, response)
+        _LOGGER.info(f"[{LOGGER_NAME}] Respnose: {repr(response)[:30]}...")
         return response
 
-    def _prase_command(self, command, arg):
+    def _parse_command(self, command, arg):
         header = command['header']
         payload = command['payload']
 
@@ -239,7 +239,7 @@ class VoiceControlAligenie(PlatformParameter, VoiceControlProcessor):
                 properties += [{'name': name.lower(), 'value': state.state}]
         # return properties if properties else [{'name': 'powerstate', 'value': 'off'}]
         return properties
-    
+
     def _discovery_process_actions(self, device_properties, raw_actions):
         actions = []
         for device_property in device_properties:
