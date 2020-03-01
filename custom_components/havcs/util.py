@@ -5,6 +5,7 @@ import homeassistant.util.color as color_util
 import time
 import logging
 import re
+import json
 import jwt
 from typing import cast
 
@@ -114,3 +115,27 @@ async def async_update_token_expiration(access_token, hass, expiration):
                 break
     except jwt.InvalidTokenError:
         _LOGGER.debug('[util] access_token[%s] is invalid, try another reauthorization on website.', access_token)
+
+
+def deserialize_custom_actions(action_name, default_action):
+    def action_func(state, attributes, payload):
+        action_attrs = attributes.get("havcs_actions")
+        if action_attrs and action_name in action_attrs:
+            domains = []
+            services = []
+            args = []
+            for domain, service, argstr in action_attrs[action_name]:
+                domains.append(domain)
+                services.append(service)
+                arg = json.loads(argstr)
+                if domain == "python_script" and "attribute" in payload:
+                    arg["havcs"] = {
+                        "attribute": payload["attribute"],
+                        "value": payload.get("value", ""),
+                    }
+                args.append(arg)
+            return (domains, services, args)
+        else:
+            return default_action
+
+    return action_func
