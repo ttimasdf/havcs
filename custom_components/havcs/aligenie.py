@@ -1,22 +1,20 @@
 import json
-import logging
-import uuid
-import copy
-import time
 from urllib.request import urlopen
-from .util import decrypt_device_id, encrypt_entity_id, deserialize_custom_actions
+import logging
+
+from .util import decrypt_device_id, encrypt_device_id, deserialize_custom_actions
 from .helper import VoiceControlProcessor, VoiceControlDeviceManager
+from .const import ATTR_DEVICE_ACTIONS
 
 _LOGGER = logging.getLogger(__name__)
 # _LOGGER.setLevel(logging.DEBUG)
 LOGGER_NAME = 'aligenie'
 
-AI_HOME = True
 DOMAIN = 'aligenie'
 
-def createHandler(hass):
+def createHandler(hass, entry):
     mode = ['handler']
-    return VoiceControlAligenie(hass, mode)
+    return VoiceControlAligenie(hass, mode, entry)
 
 class PlatformParameter:
     device_attribute_map_h2p = {
@@ -129,7 +127,7 @@ class PlatformParameter:
             'AdjustDownBrightness': lambda state, attributes, payload: (['light'], ['turn_on'], [{'brightness_pct': max(attributes['brightness_pct'] - payload['value'], 0)}]),
             'SetColor':             lambda state, attributes, payload: (['light'], ['turn_on'], [{"color_name": payload['value']}])
         },
-        'input_boolean':{
+        'havcs':{
             'TurnOn': deserialize_custom_actions("turn_on", default_action=(['input_boolean'], ['turn_on'], [{}])),
             'TurnOff': deserialize_custom_actions("turn_off", default_action=(['input_boolean'], ['turn_off'], [{}])),
             'SetBrightness': deserialize_custom_actions("set_brightness", default_action=(['input_boolean'], ['turn_off'], [{}])),
@@ -143,7 +141,7 @@ class PlatformParameter:
     }
 
 class VoiceControlAligenie(PlatformParameter, VoiceControlProcessor):
-    def __init__(self, hass, mode):
+    def __init__(self, hass, mode, entry):
         self._hass = hass
         self._mode = mode
         try:
@@ -156,7 +154,7 @@ class VoiceControlAligenie(PlatformParameter, VoiceControlProcessor):
             self._device_name_constraints = []
             import traceback
             _LOGGER.info("[%s] can get places and aliases data from website, set None.\n%s", LOGGER_NAME, traceback.format_exc())
-        self.vcdm = VoiceControlDeviceManager(DOMAIN, self.device_action_map_h2p, self.device_attribute_map_h2p, self._service_map_p2h, self.device_type_map_h2p, self._device_type_alias, self._device_name_constraints, self._zone_constraints)
+        self.vcdm = VoiceControlDeviceManager(entry, DOMAIN, self.device_action_map_h2p, self.device_attribute_map_h2p, self._service_map_p2h, self.device_type_map_h2p, self._device_type_alias, self._device_name_constraints, self._zone_constraints)
 
     def _errorResult(self, errorCode, messsage=None):
         """Generate error result"""
@@ -237,9 +235,8 @@ class VoiceControlAligenie(PlatformParameter, VoiceControlProcessor):
             state = self._hass.states.get(device_property.get('entity_id'))
             if name and state:
                 properties += [{'name': name.lower(), 'value': state.state}]
-        # return properties if properties else [{'name': 'powerstate', 'value': 'off'}]
-        return properties
-
+        return properties if properties else [{'name': 'powerstate', 'value': 'off'}]
+    
     def _discovery_process_actions(self, device_properties, raw_actions):
         actions = []
         for device_property in device_properties:
@@ -255,11 +252,11 @@ class VoiceControlAligenie(PlatformParameter, VoiceControlProcessor):
         return list(set(actions))
 
     def _discovery_process_device_type(self, raw_device_type):
-        return raw_device_type
+        return self.device_type_map_h2p.get(raw_device_type)
 
-    def _discovery_process_device_info(self, entity_id,  device_type, device_name, zone, properties, actions):
+    def _discovery_process_device_info(self, device_id,  device_type, device_name, zone, properties, actions):
         return {
-            'deviceId': encrypt_entity_id(entity_id),
+            'deviceId': encrypt_device_id(device_id),
             'deviceName': device_name,
             'deviceType': device_type,
             'zone': zone,

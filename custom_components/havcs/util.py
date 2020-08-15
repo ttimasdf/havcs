@@ -1,27 +1,21 @@
 from Crypto.Cipher import AES
-from base64 import b64decode
-from base64 import b64encode
+from base64 import b64decode, b64encode
 import homeassistant.util.color as color_util
 import time
-import logging
 import re
 import json
 import jwt
 from typing import cast
+import logging
 
+from .const import ATTR_DEVICE_ACTIONS
 
 _LOGGER = logging.getLogger(__name__)
 # _LOGGER.setLevel(logging.DEBUG)
 LOGGER_NAME = 'util'
 
-
-
-
-
-bindManager = None
 ENTITY_KEY = ''
-CONTEXT_AIHOME = None
-EXPIRATION = {}
+
 class AESCipher:
     """
     Tested under Python 3.x and PyCrypto 2.6.1.
@@ -53,26 +47,26 @@ class AESCipher:
 def decrypt_device_id(device_id):
     try:
         if not ENTITY_KEY:
-            entity_id = device_id
+            new_device_id = device_id
         else:
             device_id = device_id.replace('-', '+')
             device_id = device_id.replace('_', '/')
             pad4 = '===='
             device_id += pad4[0:len(device_id) % 4]
-            entity_id = AESCipher(ENTITY_KEY.encode('utf-8')).decrypt(device_id)
+            new_device_id = AESCipher(ENTITY_KEY.encode('utf-8')).decrypt(device_id)
     except:
-        entity_id = None
+        new_device_id = None
     finally:
-        return entity_id
-def encrypt_entity_id(entity_id):
+        return new_device_id
+def encrypt_device_id(device_id):
     if not ENTITY_KEY:
-        device_id = entity_id
+        new_device_id = device_id
     else:
-        device_id = AESCipher(ENTITY_KEY.encode('utf-8')).encrypt(entity_id.encode('utf8'))
-        device_id = device_id.replace('+', '-')
-        device_id = device_id.replace('/', '_')
-        device_id = device_id.replace('=', '')
-    return device_id
+        new_device_id = AESCipher(ENTITY_KEY.encode('utf-8')).encrypt(device_id.encode('utf8'))
+        new_device_id = new_device_id.replace('+', '-')
+        new_device_id = new_device_id.replace('/', '_')
+        new_device_id = new_device_id.replace('=', '')
+    return new_device_id
 
 def hsv2rgb(hsvColorDic):
 
@@ -108,7 +102,7 @@ async def async_update_token_expiration(access_token, hass, expiration):
         refresh_token = await hass.auth.async_get_refresh_token(cast(str, unverif_claims.get('iss')))
         for user in hass.auth._store._users.values():
             if refresh_token.id in user.refresh_tokens and refresh_token.access_token_expiration != expiration:
-                _LOGGER.debug('[util] set new access token expiration for refresh_token[%s]', refresh_token.id)
+                _LOGGER.debug("[util] set new access token expiration for refresh_token[%s]", refresh_token.id)
                 refresh_token.access_token_expiration = expiration
                 user.refresh_tokens[refresh_token.id] = refresh_token
                 hass.auth._store._async_schedule_save()
@@ -119,7 +113,7 @@ async def async_update_token_expiration(access_token, hass, expiration):
 
 def deserialize_custom_actions(action_name, default_action):
     def action_func(state, attributes, payload):
-        action_attrs = attributes.get("havcs_actions")
+        action_attrs = attributes.get(ATTR_DEVICE_ACTIONS)
         if action_attrs and action_name in action_attrs:
             domains = []
             services = []

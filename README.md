@@ -1,8 +1,30 @@
 ## 备注
-- 插件名称更改为havcs，采用独立文件配置设备信息，不用再重启HA生效。
-- 旧插件（aihome）到[release][1]页面下载。
-- 使用教程[传送门][2]。
+- havcs v3版本，配置方式发生变化，如要使用旧版本插件到[release][1]页面下载
+- 使用教程[传送门][2]
+- 建议HA版本 0.104.2 0.107.7
 # 更新日志
+- 2020-0505
+  1. 修复刷新token校验条件不正确
+- 2020-04-15
+  1. 修复web管理页面平台可见属性与后台不匹配
+- 2020-04-12
+  1. 修复dueros获取未知属性会返回错误
+- 2020-04-10
+  1. 修复修改集成配置clients不生效
+  2. 修复group寻找entity_id错误
+- 2020-04-09
+  1. 修复页面注册方法兼容问题
+- 2020-04-06
+  1. 增加页面get方法方便检测
+  2. 去除失效的自动测试提醒
+- 2020-04-05（注意：服务url以及插件配置有调整）
+  1. 增加授权页面，可自定义客户端ID，调整各服务url进同一层级（/havcs/）
+  2. 设备管理页面增加导出、导入、同步设备、查看插件配置信息的功能
+  3. 修复若干bug
+- 2020-04-01
+  1. 修复页面新增按钮失效、增加新增设备简单校验
+- 2020-03-30
+  1. havcs v3版本，增加UI配置管理
 - 2020-02-23
   1. 旧证书有问题重新进行更新，如使用app的havcs技能（连接mqtt服务器）需要重新替换本地ca.crt文件
 - 2020-01-28
@@ -83,5 +105,7 @@
 
 
 [1]: https://github.com/cnk700i/havcs/releases "历史版本"
-[2]: https://ljr.im/articles/plugin-smart-speaker-connected-to-home-assistant-integration-plus/ "【插件】智能音箱接入Home Assistant整合Plus"
+[2]: https://ljr.im/articles/plugins-havcs-edible-instructions/ "【插件】HAVCS食用说明"
 [3]: https://ljr.im/articles/home-assistant-novice-question-set/#3-%E8%B0%83%E8%AF%95%E5%8F%8A%E6%9F%A5%E7%9C%8B%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C%E6%97%A5%E5%BF%97 "调试及查看程序运行日志"
+
+
