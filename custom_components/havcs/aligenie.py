@@ -54,6 +54,7 @@ class PlatformParameter:
     _device_type_alias = {
         'television': '电视',
         'light': '灯',
+        'camera': '摄像头',
         'aircondition': '空调',
         'airpurifier': '空气净化器',
         'outlet': '插座',
@@ -101,6 +102,7 @@ class PlatformParameter:
         'climate': 'aircondition',
         'fan': 'fan',
         'light': 'light',
+        'camera': 'camera',
         'media_player': 'television',
         'remote': 'telecontroller',
         'switch': 'switch',
@@ -127,10 +129,17 @@ class PlatformParameter:
             'AdjustDownBrightness': lambda state, attributes, payload: (['light'], ['turn_on'], [{'brightness_pct': max(attributes['brightness_pct'] - payload['value'], 0)}]),
             'SetColor':             lambda state, attributes, payload: (['light'], ['turn_on'], [{"color_name": payload['value']}])
         },
+        'camera':{
+            'TurnOn': deserialize_custom_actions("turn_on", default_action=(['input_boolean'], ['turn_on'], [{}])),
+            'TurnOff': deserialize_custom_actions("turn_off", default_action=(['input_boolean'], ['turn_off'], [{}])),
+            'SetBrightness': deserialize_custom_actions("set_brightness", default_action=(['input_boolean'], ['turn_on'], [{}])),
+            'AdjustUpBrightness': deserialize_custom_actions("increase_brightness", default_action=(['input_boolean'], ['turn_on'], [{}])),
+            'AdjustDownBrightness': deserialize_custom_actions("decrease_brightness", default_action=(['input_boolean'], ['turn_on'], [{}])),
+        },
         'havcs':{
             'TurnOn': deserialize_custom_actions("turn_on", default_action=(['input_boolean'], ['turn_on'], [{}])),
             'TurnOff': deserialize_custom_actions("turn_off", default_action=(['input_boolean'], ['turn_off'], [{}])),
-            'SetBrightness': deserialize_custom_actions("set_brightness", default_action=(['input_boolean'], ['turn_off'], [{}])),
+            'SetBrightness': deserialize_custom_actions("set_brightness", default_action=(['input_boolean'], ['turn_on'], [{}])),
             'AdjustUpBrightness': deserialize_custom_actions("increase_brightness", default_action=(['input_boolean'], ['turn_on'], [{}])),
             'AdjustDownBrightness': deserialize_custom_actions("decrease_brightness", default_action=(['input_boolean'], ['turn_on'], [{}])),
         }

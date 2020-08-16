@@ -4,17 +4,17 @@
     <meta charset="utf-8">
     <title>havcs设备管理平台</title>
     <meta deviceName="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
-    <link rel="stylesheet" href="/havcs/css/weui.min.css"/>
-    <link rel="stylesheet" href="/havcs/css/weuix.css"/>
-    <link rel="stylesheet" href="/havcs/css/jquery-weui.min.css"/>
-    <link rel="stylesheet" href="/havcs/css/materialdesignicons.min.css" type="text/css"/>
-    <link rel="shortcut icon" href="/havcs/images/favicon.ico" type="image/x-icon"/>
-    <script src="/havcs/js/vue.min.js"></script>
-    <script src="/havcs/js/vue-resource.min.js"></script>
-    <script src="/havcs/js/vue-router.min.js"></script>
-    <script src="/havcs/js/ha.js"></script>
-    <script src="/havcs/js/jquery.min.js"></script>
-    <script src="/havcs/js/jquery-weui.min.js"></script>
+    <link rel="stylesheet" href="/local/havcs/css/weui.min.css"/>
+    <link rel="stylesheet" href="/local/havcs/css/weuix.css"/>
+    <link rel="stylesheet" href="/local/havcs/css/jquery-weui.min.css"/>
+    <link rel="stylesheet" href="/local/havcs/css/materialdesignicons.min.css" type="text/css"/>
+    <link rel="shortcut icon" href="/local/havcs/images/favicon.ico" type="image/x-icon"/>
+    <script src="/local/havcs/js/vue.min.js"></script>
+    <script src="/local/havcs/js/vue-resource.min.js"></script>
+    <script src="/local/havcs/js/vue-router.min.js"></script>
+    <script src="/local/havcs/js/ha.js"></script>
+    <script src="/local/havcs/js/jquery.min.js"></script>
+    <script src="/local/havcs/js/jquery-weui.min.js"></script>
     <style>
         .page-hd-title {
             text-align: center;
@@ -209,21 +209,6 @@
         <div class="page-hd-desc">
     
         </div>
-        <div class="weui-cells__title">公告</div>
-        <div class="weui-cells"> 
-            <div class="weui-cell">
-                <div class="weui-cell__hd"></div>
-                <div class="weui-cell__bd">
-                <ul id="notices">
-                    <li><a href='https://jq.qq.com/?_wv=1027&k=5mCE2MH' target="_blank">使用中遇到问题请加QQ群307773400反馈</a></li>
-                    <li v-for="item in notice.noticeList" style="display:none"><a v-bind:href='item.url' target="_blank">{{item.text}}</a></li>
-                </ul>
-                </div>
-                <div class="weui-cell__ft">
-                    <i class="weui-icon-info-circle"></i>
-                </div>
-            </div>
-        </div>
     </div>
     <div class="blank"></div>
     <p>
@@ -238,11 +223,6 @@
     <router-view :notice="notice" :device-list="deviceList" v-if="isRouterAlive"></router-view>
     <div class="blank"></div>
     <div class="weui-footer">
-        <p class="weui-footer__links">
-            <a href="https://ljr.im/articles/plugins-havcs-edible-instructions/" class="weui-footer__link">>介绍&教程<</a>
-            <a href="https://jq.qq.com/?_wv=1027&k=5mCE2MH" class="weui-footer__link">交流QQ群：307773400</a>
-        </p>
-        <p class="weui-footer-text">Copyright &copy; 2019-<script>document.write(new Date().getFullYear());</script> ljr.im</p>
     </div>
 </div>
 

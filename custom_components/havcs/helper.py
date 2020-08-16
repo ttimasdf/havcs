@@ -73,13 +73,13 @@ class VoiceControlProcessor:
         return None, devices, entity_ids
 
     async def process_control_command(self, command) -> tuple:
-        device_id = self._prase_command(command, 'device_id')
+        device_id = self._parse_command(command, 'device_id')
         device_id = self._decrypt_device_id(device_id)
         device = self.vcdm.get(device_id)
         if device_id is None or device is None:
             return self._errorResult('DEVICE_IS_NOT_EXIST'), None
         entity_ids=device.entity_id
-        action = self._prase_command(command, 'action')
+        action = self._parse_command(command, 'action')
         success_task = []
         for entity_id in entity_ids:
             domain = entity_id[:entity_id.find('.')]
@@ -92,7 +92,7 @@ class VoiceControlProcessor:
                 translation = self._service_map_p2h[domain][action]
                 if callable(translation):
                     state = self._hass.states.get(entity_id)
-                    domain_list, service_list, data_list = translation(state, device.raw_attributes, self._prase_command(command, 'payload'))
+                    domain_list, service_list, data_list = translation(state, device.raw_attributes, self._parse_command(command, 'payload'))
                     _LOGGER.debug("[%s] domain_list: %s", LOGGER_NAME, domain_list)
                     _LOGGER.debug("[%s] service_list: %s", LOGGER_NAME, service_list)
                     _LOGGER.debug("[%s] data_list: %s", LOGGER_NAME, data_list)
@@ -102,7 +102,7 @@ class VoiceControlProcessor:
                 else:
                     service_list[0] = translation
             else:
-                service_list[0] = self._prase_action_p2h(action)
+                service_list[0] = self._parse_action_p2h(action)
 
             for i in range(len(domain_list)):
                 _LOGGER.debug("[%s] %s @task_%s: domain = %s, servcie = %s, data = %s", LOGGER_NAME, entity_id, i, domain_list[i], service_list[i], data_list[i])
@@ -127,11 +127,11 @@ class VoiceControlProcessor:
         return None, properties
 
     def process_query_command(self, command) -> tuple:
-        device_id = self._prase_command(command, 'device_id')
+        device_id = self._parse_command(command, 'device_id')
         device_id = self._decrypt_device_id(device_id)
         if device_id is None:
             return self._errorResult('DEVICE_IS_NOT_EXIST'), None
-        action = self._prase_command(command, 'action')
+        action = self._parse_command(command, 'action')
         device_properties = self.vcdm.get(device_id).properties
         properties = self._query_process_propertites(device_properties, action)
         return (None, properties) if properties else (self._errorResult('IOT_DEVICE_OFFLINE'), None)

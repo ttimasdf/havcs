@@ -93,6 +93,10 @@ DEVICE_TYPE_DICT = {
         'cn_name': '灯',
         'icon': 'mdi-lightbulb'
     },
+    'camera': {
+        'cn_name': '摄像头',
+        'icon': 'mdi-camera'
+    },
     'media_player': {
         'cn_name': '播放器',
         'icon': 'mdi-television-classic'
@@ -132,6 +136,12 @@ DEVICE_ACTION_DICT ={
     },
     'query_humidity': {
         'cn_name': '查询湿度'
+    },
+    'set_color': {
+        'cn_name': '设置色温'
+    },
+    'set_brightness': {
+        'cn_name': '设置亮度'
     },
     'increase_brightness': {
         'cn_name': '调高亮度'

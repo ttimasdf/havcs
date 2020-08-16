@@ -28,8 +28,7 @@ LOGGER_NAME = 'http'
 
 class HavcsServiceView(HomeAssistantView):
     """View to handle Configuration requests."""
-
-    url = '/havcs/service'
+    url = '/api/havcs/service'
     name = 'havcs:service'
     requires_auth = False    # 不使用HA内置方法验证(request头带token)，在handleRequest()中再验证
 
@@ -63,7 +62,7 @@ class HavcsServiceView(HomeAssistantView):
         return self.json(response)
 
 class HavcsAuthorizeView(HomeAssistantView):
-    url = '/havcs/auth/authorize'
+    url = '/api/havcs/auth/authorize'
     name = 'havcs:auth:authorize'
     requires_auth = False
 
@@ -73,6 +72,11 @@ class HavcsAuthorizeView(HomeAssistantView):
         self._authorize_url = ha_url + self.url
         self._flow_id = None
         self._login_attempts = {}
+        local = hass.config.path("custom_components/" + INTEGRATION + "/html")
+        if os.path.isdir(local):
+            static_urlpath = "/static-havcs"
+            _LOGGER.info("[%s][auth/init] Registering static resources %s <= %s", LOGGER_NAME, static_urlpath, local)
+            hass.http.register_static_path(static_urlpath, local, False)
 
     async def head(self, request):
         return
@@ -129,6 +133,7 @@ class HavcsAuthorizeView(HomeAssistantView):
                 with async_timeout.timeout(5, loop=self._hass.loop):
                     response = await session.post(self._ha_url+'/auth/login_flow/'+self._flow_id, json=data)
                 result = await response.json()
+                _LOGGER.debug("[%s][auth] login_flow response = %s", LOGGER_NAME, result)
                 code = result.get('result')
                 if code:
                     self._flow_id = None
@@ -162,7 +167,7 @@ class HavcsAuthorizeView(HomeAssistantView):
 class HavcsTokenView(HomeAssistantView):
     """View to handle Configuration requests."""
 
-    url = '/havcs/auth/token'
+    url = '/api/havcs/auth/token'
     name = 'havcs:auth:token'
     requires_auth = False
 
@@ -280,16 +285,13 @@ class HavcsTokenView(HomeAssistantView):
         # return web.Response( headers={'Location': self._auth_url+'?'+query_string}, status=303)
 
 class HavcsDeviceView(HomeAssistantView):
-    url = '/havcs/device'
+    url = '/api/havcs/device'
     name = 'havcs:device'
     requires_auth = True
 
     def __init__(self, hass, device_schema):
         self._hass = hass
         self._device_schema = device_schema
-        local = hass.config.path("custom_components/" + INTEGRATION + "/html")
-        if os.path.isdir(local):
-            hass.http.register_static_path('/havcs', local, False)
         panels = hass.data.setdefault(DATA_PANELS, {})
         if INTEGRATION not in panels:
             hass.components.frontend.async_register_built_in_panel(
@@ -297,7 +299,7 @@ class HavcsDeviceView(HomeAssistantView):
                 sidebar_title = 'HAVCS设备',
                 sidebar_icon = 'mdi:home-edit',
                 frontend_url_path = INTEGRATION,
-                config = {"url": '/havcs/index.html'},
+                config = {"url": '/local/havcs/index.html'},
                 require_admin = True
             )
 
@@ -412,9 +414,9 @@ class HavcsHttpManager:
 
             session = async_get_clientsession(self._hass, verify_ssl=False)
             with async_timeout.timeout(5, loop= self._hass.loop):
-                response = await session.get(self._ha_url + '/havcs/auth/authorize')
+                response = await session.get(self._ha_url + '/api/havcs/auth/authorize')
             if response.status == 401:
-                _LOGGER.debug("[%s][check] access success: url = %s, status = %s", LOGGER_NAME, self._ha_url + '/havcs/auth/authorize', response.status)
+                _LOGGER.debug("[%s][check] access success: url = %s, status = %s", LOGGER_NAME, self._ha_url + '/api/havcs/auth/authorize', response.status)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.debug("[%s][check] retry check after 15s", LOGGER_NAME)
             self._retry_times -= 1

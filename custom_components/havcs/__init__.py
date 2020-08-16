@@ -84,7 +84,7 @@ DEFAULT_QOS = 0
 DEFAULT_PROTOCOL = PROTOCOL_311
 DEFAULT_TLS_PROTOCOL = 'auto'
 DEFAULT_EXPIRE_IN_HOURS = 24
-DEFAULT_ALLOWED_URI = ['/havcs/auth/token', '/havcs/service']
+DEFAULT_ALLOWED_URI = ['/api/havcs/auth/token', '/api/havcs/service']
 
 CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in the MQTT broker configuration'
 
@@ -631,6 +631,7 @@ async def async_setup_entry(hass, config_entry):
                             module = importlib.import_module('custom_components.{}.{}'.format(DOMAIN,platform))
                             _LOGGER.info("[post-task] import %s.%s", DOMAIN, platform)
                             hass.data[DOMAIN][DATA_HAVCS_HANDLER][platform] = module.createHandler(hass, ent)
+                            _LOGGER.info("[post-task] import %s.%s successful", DOMAIN, platform)
                             # hass.data[DOMAIN][DATA_HAVCS_HANDLER][platform].vcdm.all(hass, True)
                         except ImportError as err:
                             _LOGGER.error("[post-task] Unable to import %s.%s, %s", DOMAIN, platform, err)

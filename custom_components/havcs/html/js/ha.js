@@ -69,7 +69,7 @@ class HA {
         }else{
             data = params
         }
-        let url = '/havcs/device'
+        let url = '/api/havcs/device'
         let authorization = await this.getAuthorization()
         return fetch(url, {
             method: 'post',
@@ -81,7 +81,7 @@ class HA {
     }
 
     async file(params) {
-        let url = '/havcs/device'
+        let url = '/api/havcs/device'
         let authorization = await this.getAuthorization()
 
         fetch(url, {
